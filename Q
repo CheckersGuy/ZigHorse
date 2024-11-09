@@ -1,0 +1,36 @@
+//here goes the entire search
+//
+
+const pos = @import("generator.zig");
+const std = @import("std");
+const allocator = std.heap.page_allocator;
+
+const MAX_PLY: comptime_int = 128;
+
+const StackItem = struct {
+    ply: i32,
+    position: pos.Position,
+    move: pos.Move,
+};
+
+pub fn search(depth: i32, position: pos.Position) i32 {
+    const search_stack = allocator.alloc(StackItem, MAX_PLY);
+    defer allocator.free(search_stack);
+}
+//probably missing some things
+
+pub fn searchValue(depth: i32, _: i32, _: i32, stack_item: *StackItem) i32 {
+    //some basic search
+
+    if (depth == 0) {
+        //returning the eval for now
+        return 0;
+    }
+
+    var move_list: pos.MoveListe(40) = .{};
+    pos.get_moves(40, stack_item.position, &move_list);
+
+    var index = 0;
+
+    while (index < move_list.length) : (index = index + 1) {}
+}
