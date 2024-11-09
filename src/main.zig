@@ -36,33 +36,16 @@ pub fn perft_iter(depth: usize) !void {
 }
 
 pub fn main() !void {
-    //will continue with this tomorrow 
-    var input: [256]c_int align(32) = undefined;
-    var input2: [256]c_int align(32) = undefined;
-    //var result: [256]c_int align(32) = undefined;
+    //will continue with this tomorrow
+    var input: [256]c_short align(32) = undefined;
+    //var result: [256]c_char align(32) = undefined;
 
     for (&input, 0..) |*value, index| {
         value.* = @intCast(index);
-        std.debug.print("Index: {any}\n", .{input[index]});
+        //std.debug.print("Index: {any}\n", .{input[index]});
     }
-    for (&input2, 0..) |*value, index| {
-        value.* = @intCast(index);
-    }
-    Simd.testing_simd() 
-    //const c_pointer: [*c]c_int = @ptrCast(&array);
-}
-//use splitSequence and possibly tokenizeAny for there reverse function
-
-test "testingPosition" {
-    //std.debug.print("Something {?}", .{value});
-
-    //testing out simd stuff
-
-    var input: [256]i16 align(32) = undefined;
-    var output: [256]u8 align(32) = undefined;
-
-    for (&input, 0..) |*value, i| {
-        value.* = @intCast(i);
-    }
-    Simd.accum_activation8_256(@as([*c]i16, @ptrCast(&input)), @as([*c]u8, @ptrCast(&output)));
+    Simd.testing_512();
+    //for (result, 0..) |value, index| {
+    //    std.debug.print("Value at index {any} is {any}\n", .{ index, value });
+    //}
 }

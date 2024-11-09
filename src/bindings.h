@@ -1,10 +1,16 @@
-#ifndef BINDINGS
-#define BINDINGS
-#include "immintrin.h"
-#include "stdio.h"
-void foo(void);
+#ifndef BINDINGS_H
+#define BINDINGS_H
+#include "templates.h"
+#ifdef size_hidden
+#undef size_hidden
+#endif
+#define size_hidden 256
+#include "hiddenActivation.h"
 
-void foo2(int *pointer, int num_items);
+#ifdef size_hidden
+#undef size_hidden
+#endif
+#define size_hidden 512
+#include "hiddenActivation.h"
 
-void testing_simd(int *a, int *b, int *result, int num_elements);
-#endif // !BINDINGS
+#endif // !BINDINGS_H
