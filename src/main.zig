@@ -4,7 +4,7 @@ const generator = @import("generator.zig");
 const std = @import("std");
 const print = std.debug.print;
 const allocator = std.heap.page_allocator;
-const Simd = @cImport(@cInclude("bindings.h"));
+const Simd = @cImport(@cInclude("NetworkHelper.h"));
 
 const stdout_file = std.io.getStdOut().writer();
 var buf_reader = std.io.bufferedWriter(stdout_file);
@@ -37,15 +37,19 @@ pub fn perft_iter(depth: usize) !void {
 
 pub fn main() !void {
     //will continue with this tomorrow
-    var input: [256]c_short align(32) = undefined;
-    //var result: [256]c_char align(32) = undefined;
+    var input: [256]c_int align(32) = undefined;
+    var result: [256]c_char align(32) = undefined;
 
     for (&input, 0..) |*value, index| {
         value.* = @intCast(index);
-        //std.debug.print("Index: {any}\n", .{input[index]});
+        std.debug.print("Value {any}\n", .{input[index]});
     }
-    Simd.testing_512();
-    //for (result, 0..) |value, index| {
-    //    std.debug.print("Value at index {any} is {any}\n", .{ index, value });
-    //}
+
+    //Simd.accum_activation8_256(@ptrCast(&input), @ptrCast(&result));
+    Simd.clipped8_256(@ptrCast(&input), @ptrCast(&result));
+
+    for (result, 0..) |value, index| {
+        const test_value: u8 = @bitCast(value);
+        std.debug.print("Value at index {any} is {any}\n", .{ index, test_value });
+    }
 }

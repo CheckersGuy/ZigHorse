@@ -30,7 +30,7 @@ pub fn build(b: *std.Build) void {
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
     //
-    const sources = [_][]const u8{ "src/bindings.c", "src/hiddenActivation.c" };
+    const sources = [_][]const u8{ "src/NetworkHelper.c", "src/AccumActivation.c", "src/HiddenActivation.c" };
     const flags = [_][]const u8{"-O3"};
 
     exe.addIncludePath(b.path("src"));

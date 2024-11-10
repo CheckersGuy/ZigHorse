@@ -1,17 +1,18 @@
 
 
-#ifdef size_hidden
+#ifdef size_accum_active
 #include "immintrin.h"
 #include "stdint.h"
 #include "templates.h"
 #include <stdio.h>
 
-void TEMPLATE(testing, size_hidden)() { printf("%d", size_hidden); }
+void TEMPLATE(testing, size_accum_active)() { printf("%d", size_accum_active); }
 
-void TEMPLATE(accum_activation8, size_hidden)(int16_t *acc, uint8_t *out) {
+void TEMPLATE(accum_activation8, size_accum_active)(int16_t *acc,
+                                                    uint8_t *out) {
 
 #ifdef AVX128
-  int num_chunks = input_size / 8;
+  int num_chunks = size_accum_active / 8;
   __m128i *in_a = (__m128i *)acc;
   __m128i *output = (__m128i *)out;
   const __m128i max_val = _mm_set1_epi16(127);
@@ -43,7 +44,7 @@ void TEMPLATE(accum_activation8, size_hidden)(int16_t *acc, uint8_t *out) {
   }
 #endif
 #ifdef AVX256
-  const int num_chunks = size_hidden / 16;
+  const int num_chunks = size_accum_active / 16;
 
   __m256i *in_a = (__m256i *)acc;
   __m256i *output = (__m256i *)out;
