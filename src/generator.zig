@@ -91,7 +91,7 @@ pub fn MoveListe(size: comptime_int) type {
         inline fn shift_right(self: *MoveListe(size)) void {
             var i: i32 = size - 1;
             while (i >= 0) : (i = i - 1) {
-                self.liste[i] = self.liste[i - 1];
+                self.liste[i + 1] = self.liste[i];
             }
         }
 

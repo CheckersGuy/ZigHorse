@@ -35,7 +35,7 @@ pub fn perft_iter(depth: usize) !void {
     }
 }
 
-pub fn main() !void {
+pub fn test_simd() !void {
     //will continue with this tomorrow
     var input: [256]c_int align(32) = undefined;
     var result: [256]c_char align(32) = undefined;
@@ -53,3 +53,5 @@ pub fn main() !void {
         std.debug.print("Value at index {any} is {any}\n", .{ index, test_value });
     }
 }
+
+pub fn main() !void {}
