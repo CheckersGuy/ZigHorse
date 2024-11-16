@@ -2,13 +2,9 @@
 const generator = @import("generator.zig");
 
 const std = @import("std");
-const print = std.debug.print;
-const allocator = std.heap.page_allocator;
 const Simd = @cImport(@cInclude("NetworkHelper.h"));
-
-const stdout_file = std.io.getStdOut().writer();
-var buf_reader = std.io.bufferedWriter(stdout_file);
-const stdout = buf_reader.writer();
+const Accumulator = @import("Accumulator.zig");
+const net_file = @embedFile("finalformshuffled.quant");
 
 pub fn perft(comptime color: generator.Color, pos: generator.Position, depth: usize) usize {
     var counter: usize = 0;
@@ -26,16 +22,15 @@ pub fn perft(comptime color: generator.Color, pos: generator.Position, depth: us
     return counter;
 }
 
-pub fn perft_iter(depth: usize) !void {
+pub fn perft_iter(depth: usize, stdout: anytype) !void {
     for (1..(depth + 1)) |val| {
         const pos = generator.Position.starting_position();
         const count = perft(generator.Color.BLACK, pos, val);
         try stdout.print("Ply {} and number of nodes: {}\n", .{ val, count });
-        try buf_reader.flush();
     }
 }
 
-pub fn test_simd() !void {
+pub fn test_simd() void {
     //will continue with this tomorrow
     var input: [256]c_int align(32) = undefined;
     var result: [256]c_char align(32) = undefined;
@@ -54,4 +49,16 @@ pub fn test_simd() !void {
     }
 }
 
-pub fn main() !void {}
+pub fn main() !void {
+    const stdout = std.io.getStdOut().writer();
+    //to be continued
+    // var buf: [132]u8 = undefined;
+    //var reader = std.io.fixedBufferStream((net_file.*)[0..]).reader();
+
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    var accumulator = try Accumulator.Accumulator(4096).new(allocator);
+    defer accumulator.deinit(allocator);
+
+    try stdout.print("Number of weights {} and biases {}", .{ accumulator.ft_weights.len, accumulator.ft_biases.len });
+}
