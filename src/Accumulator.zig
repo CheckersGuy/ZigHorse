@@ -6,18 +6,18 @@ const Color = generator.Color;
 pub fn Accumulator(out_dim: comptime_int) type {
     return struct {
         const Self = @This();
+        const num_weights: comptime_int = 120 * out_dim;
+        const num_biases: comptime_int = out_dim;
         black_acc: [out_dim]i32 align(64) = undefined,
         white_acc: [out_dim]i32 align(64) = undefined,
-        ft_weights: []const i16,
-        ft_biases: []const i16,
+        ft_weights: []i16,
+        ft_biases: []i16,
         removed_features: [32]u16 = [_]u16{0} ** 32,
         added_features: [32]u16 = [_]u16{0} ** 32,
         previous_black: Position = Position.new(),
         previous_white: Position = Position.new(),
 
         pub fn new(allocator: std.mem.Allocator) !Self {
-            const num_weights = 120 * out_dim;
-            const num_biases = out_dim;
             return .{
                 .ft_weights = try allocator.alignedAlloc(i16, 64, num_weights),
                 .ft_biases = try allocator.alignedAlloc(i16, 64, num_biases),
@@ -29,17 +29,43 @@ pub fn Accumulator(out_dim: comptime_int) type {
             allocator.free(self.ft_biases);
         }
 
-        pub fn update(_: Color, _: Position) void {}
-
-        pub fn load(self: *Self, file_pointer: *const u8) *const u8 {
-            const num_weights = 120 * out_dim;
-            const num_biases = out_dim;
+        pub fn load(self: *Self, file_pointer: [*]const u8) [*]const u8 {
             const params: [*]const i16 = @ptrCast(@alignCast(file_pointer));
             const weights = params[0..num_weights];
             const biases = params[num_weights..(num_weights + num_biases)];
             std.mem.copyForwards(i16, self.ft_weights, weights);
             std.mem.copyForwards(i16, self.ft_biases, biases);
             return file_pointer + (@sizeOf(i16) * num_biases + @sizeOf(i16) * num_weights);
+        }
+
+        pub fn update(_: Color, _: Position) void {}
+
+        pub fn apply(self: *Self, _: Color, before: Position, after: Position) void {
+            const added = [_]u32{ after.wp & (~before.wp) & (~after.k), after.bp & (~before.bp) & (~after.k), after.wp & (~before.wp) & after.k, after.bp & (~before.bp) & after.k };
+            const removed = [_]u32{ before.wp & (~after.wp) & (~before.k), before.bp & (~after.bp) & (~before.k), before.wp & (~after.wp) & before.k, before.bp & (~after.bp) & before.k };
+            const offsets = [_]i32{ -4, 28, 28 + 28, 28 + 28 + 32 };
+
+            inline for ([_]*const [4]u32{ &added, &removed }, 0..) |features, p| {
+                var num_removed: usize = 0;
+                var num_active: usize = 0;
+                for (features, 0..) |*feature, index| {
+                    const offset = offsets[index];
+                    var pieces: u32 = feature.*;
+                    while (pieces != 0) {
+                        const ind = @ctz(pieces) + offset;
+
+                        std.debug.print("{any}\n", .{num_active});
+                        if (comptime p == 0) {
+                            self.added_features[num_active] = @intCast(ind);
+                            num_active += 1;
+                        } else {
+                            self.removed_features[num_removed] = @intCast(ind);
+                            num_removed += 1;
+                        }
+                        pieces &= pieces - 1;
+                    }
+                }
+            }
         }
     };
 }

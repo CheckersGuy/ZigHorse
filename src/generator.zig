@@ -15,6 +15,8 @@ pub const PieceType = enum {
     KING,
     BPAWN,
     BKING,
+    WPAWN,
+    WKING,
 };
 
 const MoveType = enum { PawnMove, KingMove, PromoMove, KingCapture, PawnCapture, PromoCapture };
@@ -32,7 +34,7 @@ pub const Color = enum(i32) {
 };
 
 fn defaultShift(comptime color: Color, maske: u32) u32 {
-    if (color == Color.BLACK) {
+    if (comptime color == Color.BLACK) {
         return maske << 4;
     } else {
         return maske >> 4;
@@ -40,7 +42,7 @@ fn defaultShift(comptime color: Color, maske: u32) u32 {
 }
 
 fn forwardMask(comptime color: Color, maske: u32) u32 {
-    if (color == Color.BLACK) {
+    if (comptime color == Color.BLACK) {
         return ((maske & MASK_L3) << 3) | ((maske & MASK_L5) << 5);
     } else {
         return ((maske & MASK_R3) >> 3) | ((maske & MASK_R5) >> 5);

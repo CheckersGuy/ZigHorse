@@ -57,8 +57,20 @@ pub fn main() !void {
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    var accumulator = try Accumulator.Accumulator(4096).new(allocator);
+    var accumulator = try Accumulator.Accumulator(2 * 4096).new(allocator);
     defer accumulator.deinit(allocator);
+    _ = accumulator.load(net_file);
 
-    try stdout.print("Number of weights {} and biases {}", .{ accumulator.ft_weights.len, accumulator.ft_biases.len });
+    try stdout.print("Number of weights {} and biases {}\n", .{ accumulator.ft_weights.len, accumulator.ft_biases.len });
+
+    //for (accumulator.ft_biases) |value| {
+    //   try stdout.print("{any}\n", .{value});
+    //}
+
+    const after_position = generator.Position.starting_position();
+    const before_position = generator.Position.new();
+
+    try after_position.print_position(stdout);
+
+    accumulator.apply(generator.Color.BLACK, before_position, after_position);
 }
