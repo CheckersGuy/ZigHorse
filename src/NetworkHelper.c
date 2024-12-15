@@ -19,3 +19,9 @@
 #endif
 #define size_hidden_active 256
 #include "HiddenActivation.c"
+
+#ifdef size_outdim_accum
+#undef size_outdim_accum
+#endif
+#define size_outdim_accum 8192
+#include "AccumForward.c"

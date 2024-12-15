@@ -1,8 +1,13 @@
 #ifdef size_outdim_accum
-
-#endif
 #include "immintrin.h"
-void accum_forward(int16_t *input) {
+#include "stdint.h"
+#include "templates.h"
+#include <stdio.h>
+
+void TEMPLATE(acum_forward, size_outdim_accum)(int16_t *ft_weights,
+                                               int32_t *added, int32_t *removed,
+                                               int32_t num_active,
+                                               int32_t num_removed) {
   __m256i *accu = (__m256i *)input;
   const int num_regs = 16; // number of available avx2 registers
   const int OutRegisters =
@@ -17,7 +22,7 @@ void accum_forward(int16_t *input) {
     }
     for (int i = 0; i < num_active; ++i) {
       const __m256i *weights =
-          (__m256i *)(ft_weights + size_outdim_accum * active_features[i]);
+          (__m256i *)(ft_weights + size_outdim_accum * added[i]);
 
       for (int j = 0; j < num_regs; ++j) {
         regs[j] = _mm256_add_epi16(
@@ -27,7 +32,7 @@ void accum_forward(int16_t *input) {
 
     for (int i = 0; i < num_removed; ++i) {
       const __m256i *weights =
-          (__m256i *)(ft_weights + size_outdim_accum * removed_features[i]);
+          (__m256i *)(ft_weights + size_outdim_accum * removed[i]);
       for (int j = 0; j < num_regs; ++j) {
         regs[j] = _mm256_sub_epi16(
             regs[j], _mm256_load_si256(weights + j + k * num_regs));
@@ -38,3 +43,5 @@ void accum_forward(int16_t *input) {
     }
   }
 }
+
+#endif

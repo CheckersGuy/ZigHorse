@@ -54,7 +54,6 @@ pub fn main() !void {
     //to be continued
     // var buf: [132]u8 = undefined;
     //var reader = std.io.fixedBufferStream((net_file.*)[0..]).reader();
-
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     var accumulator = try Accumulator.Accumulator(2 * 4096).new(allocator);
