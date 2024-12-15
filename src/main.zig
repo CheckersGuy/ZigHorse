@@ -71,5 +71,5 @@ pub fn main() !void {
 
     try after_position.print_position(stdout);
 
-    accumulator.apply(generator.Color.BLACK, before_position, after_position);
+    try accumulator.apply(generator.Color.BLACK, before_position, after_position);
 }

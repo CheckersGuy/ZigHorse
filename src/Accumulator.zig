@@ -2,7 +2,7 @@ const std = @import("std");
 const generator = @import("generator.zig");
 const Position = generator.Position;
 const Color = generator.Color;
-
+const Simd = @cImport(@cInclude("NetworkHelper.h"));
 pub fn Accumulator(out_dim: comptime_int) type {
     return struct {
         const Self = @This();
@@ -12,8 +12,8 @@ pub fn Accumulator(out_dim: comptime_int) type {
         white_acc: [out_dim]i32 align(64) = undefined,
         ft_weights: []i16,
         ft_biases: []i16,
-        removed_features: [32]u16 = [_]u16{0} ** 32,
-        added_features: [32]u16 = [_]u16{0} ** 32,
+        removed_features: [32]i32 = [_]i32{0} ** 32,
+        added_features: [32]i32 = [_]i32{0} ** 32,
         previous_black: Position = Position.new(),
         previous_white: Position = Position.new(),
 
@@ -40,21 +40,22 @@ pub fn Accumulator(out_dim: comptime_int) type {
 
         pub fn update(_: Color, _: Position) void {}
 
-        pub fn apply(self: *Self, _: Color, before: Position, after: Position) void {
-            const added = [_]u32{ after.wp & (~before.wp) & (~after.k), after.bp & (~before.bp) & (~after.k), after.wp & (~before.wp) & after.k, after.bp & (~before.bp) & after.k };
-            const removed = [_]u32{ before.wp & (~after.wp) & (~before.k), before.bp & (~after.bp) & (~before.k), before.wp & (~after.wp) & before.k, before.bp & (~after.bp) & before.k };
+        pub fn apply(self: *Self, perp: Color, before: Position, after: Position) !void {
+            var added = [_]u32{ after.wp & (~before.wp) & (~after.k), after.bp & (~before.bp) & (~after.k), after.wp & (~before.wp) & after.k, after.bp & (~before.bp) & after.k };
+            var removed = [_]u32{ before.wp & (~after.wp) & (~before.k), before.bp & (~after.bp) & (~before.k), before.wp & (~after.wp) & before.k, before.bp & (~after.bp) & before.k };
             const offsets = [_]i32{ -4, 28, 28 + 28, 28 + 28 + 32 };
-
+            var input = if (perp == Color.BLACK) self.black_acc else self.white_acc;
+            var num_removed: usize = 0;
+            var num_active: usize = 0;
+            const stdout = std.io.getStdOut().writer();
             inline for ([_]*const [4]u32{ &added, &removed }, 0..) |features, p| {
-                var num_removed: usize = 0;
-                var num_active: usize = 0;
                 for (features, 0..) |*feature, index| {
                     const offset = offsets[index];
                     var pieces: u32 = feature.*;
                     while (pieces != 0) {
                         const ind = @ctz(pieces) + offset;
-
-                        std.debug.print("{any}\n", .{num_active});
+                        try stdout.print("{}\n", .{offset});
+                        //std.debug.print("{any}\n", .{num_active});
                         if (comptime p == 0) {
                             self.added_features[num_active] = @intCast(ind);
                             num_active += 1;
@@ -66,6 +67,7 @@ pub fn Accumulator(out_dim: comptime_int) type {
                     }
                 }
             }
+            Simd.accum_forward_8192(@ptrCast(&input), @ptrCast(&self.ft_weights), @ptrCast(&self.added_features), @ptrCast(&self.removed_features), @intCast(num_active), @intCast(num_removed));
         }
     };
 }

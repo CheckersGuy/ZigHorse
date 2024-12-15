@@ -31,7 +31,7 @@ pub fn build(b: *std.Build) void {
     // step when running `zig build`).
     //
     const sources = [_][]const u8{ "src/NetworkHelper.c", "src/AccumActivation.c", "src/HiddenActivation.c", "src/AccumForward.c" };
-    const flags = [_][]const u8{"-O3"};
+    const flags = [_][]const u8{ "-O3", "-mssse3" };
 
     exe.addIncludePath(b.path("src"));
     exe.addCSourceFiles(.{ .files = &sources, .flags = &flags });

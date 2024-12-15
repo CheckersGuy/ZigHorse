@@ -4,10 +4,10 @@
 #include "templates.h"
 #include <stdio.h>
 
-void TEMPLATE(acum_forward, size_outdim_accum)(int16_t *ft_weights,
-                                               int32_t *added, int32_t *removed,
-                                               int32_t num_active,
-                                               int32_t num_removed) {
+void TEMPLATE(accum_forward,
+              size_outdim_accum)(int16_t *input, int16_t *ft_weights,
+                                 int32_t *added, int32_t *removed,
+                                 int32_t num_active, int32_t num_removed) {
   __m256i *accu = (__m256i *)input;
   const int num_regs = 16; // number of available avx2 registers
   const int OutRegisters =
@@ -21,14 +21,13 @@ void TEMPLATE(acum_forward, size_outdim_accum)(int16_t *ft_weights,
       regs[i] = _mm256_load_si256(accu + i + k * num_regs);
     }
     for (int i = 0; i < num_active; ++i) {
-      const __m256i *weights =
-          (__m256i *)(ft_weights + size_outdim_accum * added[i]);
-
+      const __m256i *weights = (__m256i *)(ft_weights);
       for (int j = 0; j < num_regs; ++j) {
         regs[j] = _mm256_add_epi16(
             _mm256_load_si256(weights + j + k * num_regs), regs[j]);
       }
     }
+    return;
 
     for (int i = 0; i < num_removed; ++i) {
       const __m256i *weights =
@@ -43,5 +42,9 @@ void TEMPLATE(acum_forward, size_outdim_accum)(int16_t *ft_weights,
     }
   }
 }
-
+void loading_test(int16_t *ft_weights) {
+  __m256i *accu = (__m256i *)ft_weights;
+  __m256i reg = _mm256_load_si256(accu);
+  _mm256_store_si256(accu, reg);
+}
 #endif
