@@ -30,13 +30,10 @@ pub fn build(b: *std.Build) void {
     // standard location when the user invokes the "install" step (the default
     // step when running `zig build`).
     //
-    const sources = [_][]const u8{ "src/NetworkHelper.c", "src/AccumActivation.c", "src/HiddenActivation.c", "src/AccumForward.c" };
-    const flags = [_][]const u8{ "-O3", "-mssse3" };
+
+    // const flags = [_][]const u8{ "-O3", "-march=native", "-fno-sanitize-trap=undefined" };
 
     exe.addIncludePath(b.path("src"));
-    exe.addCSourceFiles(.{ .files = &sources, .flags = &flags });
-
-    exe.linkLibC();
 
     b.installArtifact(exe);
 
