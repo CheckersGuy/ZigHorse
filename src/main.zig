@@ -38,7 +38,7 @@ pub fn test_simd() void {
 
 pub fn main() !void {
     const stdout = std.io.getStdOut().writer();
-    try perft_iter(12, stdout);
+    try perft_iter(13, stdout);
 }
 
 pub fn main_testing() !void {
