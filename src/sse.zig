@@ -1405,7 +1405,7 @@ pub inline fn _mm_setzero_ps() __m128 {
 
 pub inline fn _mm_sfence() void {
     if (has_sse) {
-        asm volatile ("sfence" ::: "memory");
+        asm volatile ("sfence" ::: .{ .memory = true });
     } else {
         _mm_mfence();
     }
@@ -2456,7 +2456,7 @@ pub inline fn _mm_insert_epi16(a: __m128i, i: i16, comptime imm8: comptime_int) 
 
 pub inline fn _mm_lfence() void {
     if (has_sse2) {
-        asm volatile ("lfence" ::: "memory");
+        asm volatile ("lfence" ::: .{ .memory = true });
     } else {
         _mm_mfence();
     }
@@ -2650,7 +2650,7 @@ pub inline fn _mm_max_sd(a: __m128d, b: __m128d) __m128d {
 
 pub inline fn _mm_mfence() void {
     if (has_sse2) {
-        asm volatile ("mfence" ::: "memory");
+        asm volatile ("mfence" ::: .{ .memory = true });
     } else {
         // `@fence(.SeqCst)` was removed in ziglang/zig#21585
         // garbage work-around
@@ -6890,7 +6890,7 @@ pub inline fn _mm_mask_i32gather_epi32(src: __m128i, base_addr: [*]align(1) cons
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -6946,7 +6946,7 @@ pub inline fn _mm256_mask_i32gather_epi32(src: __m256i, base_addr: [*]align(1) c
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7002,7 +7002,7 @@ pub inline fn _mm_mask_i32gather_epi64(src: __m128i, base_addr: [*]align(1) cons
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7051,7 +7051,7 @@ pub inline fn _mm256_mask_i32gather_epi64(src: __m256i, base_addr: [*]align(1) c
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7092,7 +7092,7 @@ pub inline fn _mm_mask_i32gather_pd(src: __m128d, base_addr: [*]align(1) const f
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7133,7 +7133,7 @@ pub inline fn _mm256_mask_i32gather_pd(src: __m256d, base_addr: [*]align(1) cons
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7181,7 +7181,7 @@ pub inline fn _mm_mask_i32gather_ps(src: __m128, base_addr: [*]align(1) const f3
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7222,7 +7222,7 @@ pub inline fn _mm256_mask_i32gather_ps(src: __m256, base_addr: [*]align(1) const
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7262,7 +7262,7 @@ pub inline fn _mm_mask_i64gather_epi32(src: __m128i, base_addr: [*]align(1) cons
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7310,7 +7310,7 @@ pub inline fn _mm256_mask_i64gather_epi32(src: __m128i, base_addr: [*]align(1) c
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7349,7 +7349,7 @@ pub inline fn _mm_mask_i64gather_epi64(src: __m128i, base_addr: [*]align(1) cons
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7388,7 +7388,7 @@ pub inline fn _mm256_mask_i64gather_epi64(src: __m256i, base_addr: [*]align(1) c
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7437,7 +7437,7 @@ pub inline fn _mm_mask_i64gather_pd(src: __m128d, base_addr: [*]align(1) const f
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7476,7 +7476,7 @@ pub inline fn _mm256_mask_i64gather_pd(src: __m256d, base_addr: [*]align(1) cons
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7527,7 +7527,7 @@ pub inline fn _mm_mask_i64gather_ps(src: __m128, base_addr: [*]align(1) const f3
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7576,7 +7576,7 @@ pub inline fn _mm256_mask_i64gather_ps(src: __m128, base_addr: [*]align(1) const
               [mask] "+x" (m),
             : [base_addr] "r" (base_addr),
               [vindex] "x" (vindex),
-            : "memory"
+            : .{ .memory = true }
         );
         return s;
     } else {
@@ -7648,7 +7648,7 @@ pub inline fn _mm_maskload_epi32(mem_addr: [*]align(1) const i32, mask: __m128i)
             : [ret] "=x" (-> __m128i),
             : [a] "x" (mask),
               [b] "r" (mem_addr),
-            : "memory"
+            : .{ .memory = true }
         );
     } else {
         const pred = @as(i32x4, @splat(0)) > bitCast_i32x4(mask);
@@ -7673,7 +7673,7 @@ pub inline fn _mm256_maskload_epi32(mem_addr: [*]align(1) const i32, mask: __m25
             : [ret] "=x" (-> __m256i),
             : [a] "x" (mask),
               [b] "r" (mem_addr),
-            : "memory"
+            : .{ .memory = true }
         );
     } else {
         const pred = @as(i32x8, @splat(0)) > bitCast_i32x8(mask);
@@ -7691,7 +7691,7 @@ pub inline fn _mm_maskload_epi64(mem_addr: [*]align(1) const i64, mask: __m128i)
             : [ret] "=x" (-> __m128i),
             : [a] "x" (mask),
               [b] "r" (mem_addr),
-            : "memory"
+            : .{ .memory = true }
         );
     } else {
         const pred = @as(i64x2, @splat(0)) > bitCast_i64x2(mask);
@@ -7709,7 +7709,7 @@ pub inline fn _mm256_maskload_epi64(mem_addr: [*]align(1) const i64, mask: __m25
             : [ret] "=x" (-> __m256i),
             : [a] "x" (mask),
               [b] "r" (mem_addr),
-            : "memory"
+            : .{ .memory = true }
         );
     } else {
         const pred = @as(i64x4, @splat(0)) > bitCast_i64x4(mask);
@@ -7728,7 +7728,7 @@ pub inline fn _mm_maskstore_epi32(mem_addr: [*]align(1) i32, mask: __m128i, a: _
             : [mem_addr] "r" (mem_addr),
               [mask] "x" (mask),
               [a] "x" (a),
-            : "memory"
+            : .{ .memory = true }
         );
     } else {
         const pred = @as(i32x4, @splat(0)) > bitCast_i32x4(mask);
@@ -7757,7 +7757,7 @@ pub inline fn _mm256_maskstore_epi32(mem_addr: [*]align(1) i32, mask: __m256i, a
             : [mem_addr] "r" (mem_addr),
               [mask] "x" (mask),
               [a] "x" (a),
-            : "memory"
+            : .{ .memory = true }
         );
     } else {
         const pred = @as(i32x8, @splat(0)) > bitCast_i32x8(mask);
@@ -7774,7 +7774,7 @@ pub inline fn _mm_maskstore_epi64(mem_addr: [*]align(1) i64, mask: __m128i, a: _
             : [mem_addr] "r" (mem_addr),
               [mask] "x" (mask),
               [a] "x" (a),
-            : "memory"
+            : .{ .memory = true }
         );
     } else {
         const pred = @as(i64x2, @splat(0)) > bitCast_i64x2(mask);
@@ -7791,7 +7791,7 @@ pub inline fn _mm256_maskstore_epi64(mem_addr: [*]align(1) i64, mask: __m256i, a
             : [mem_addr] "r" (mem_addr),
               [mask] "x" (mask),
               [a] "x" (a),
-            : "memory"
+            : .{ .memory = true }
         );
     } else {
         const pred = @as(i64x4, @splat(0)) > bitCast_i64x4(mask);
@@ -8468,7 +8468,7 @@ pub inline fn _mm256_stream_load_si256(mem_addr: *align(32) const anyopaque) __m
         return asm volatile ("vmovntdqa (%[a]),  %[ret]"
             : [ret] "=x" (-> __m256i),
             : [a] "r" (src),
-            : "memory"
+            : .{ .memory = true }
         );
     } else {
         // fallback: load without non-temporal hint

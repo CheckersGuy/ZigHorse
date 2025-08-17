@@ -419,3 +419,19 @@ pub fn get_captures(size: comptime_int, pos: Position, liste: *MoveListe(size)) 
         loop_captures(size, Color.WHITE, pos, liste);
     }
 }
+
+pub fn perft(comptime color: Color, pos: Position, depth: usize) usize {
+    var counter: usize = 0;
+    var liste: MoveListe(40) = .{};
+    get_moves(40, pos, &liste);
+    if (depth == 1) {
+        return liste.length;
+    }
+    var index: usize = 0;
+    while (index < liste.length) : (index += 1) {
+        var my_copy = pos;
+        my_copy.make_move_color(color, liste.liste[index]);
+        counter += perft(@enumFromInt(-@intFromEnum(color)), my_copy, depth - 1);
+    }
+    return counter;
+}

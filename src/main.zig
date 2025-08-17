@@ -5,27 +5,13 @@ const std = @import("std");
 const Accumulator = @import("Accumulator.zig");
 const net_file = @embedFile("finalformshuffled.quant");
 const simd = @import("sse.zig");
-pub fn perft(comptime color: generator.Color, pos: generator.Position, depth: usize) usize {
-    var counter: usize = 0;
-    var liste: generator.MoveListe(40) = .{};
-    generator.get_moves(40, pos, &liste);
-    if (depth == 1) {
-        return liste.length;
-    }
-    var index: usize = 0;
-    while (index < liste.length) : (index += 1) {
-        var my_copy = pos;
-        my_copy.make_move_color(color, liste.liste[index]);
-        counter += perft(@enumFromInt(-@intFromEnum(color)), my_copy, depth - 1);
-    }
-    return counter;
-}
 
 pub fn perft_iter(depth: usize, stdout: anytype) !void {
     const pos = generator.Position.starting_position();
     for (1..(depth + 1)) |val| {
-        const count = perft(generator.Color.BLACK, pos, val);
+        const count = generator.perft(generator.Color.BLACK, pos, val);
         try stdout.print("Ply {} and number of nodes: {}\n", .{ val, count });
+        try stdout.flush();
     }
 }
 
@@ -37,8 +23,28 @@ pub fn test_simd() void {
 }
 
 pub fn main() !void {
-    const stdout = std.io.getStdOut().writer();
+    // const stdout = std.io.getStdOut().writer();
+    // try perft_iter(13, stdout);
+    var stdout_buffer: [1024]u8 = undefined;
+    var stdout_writer = std.fs.File.stdout().writer(&stdout_buffer);
+    const stdout = &stdout_writer.interface;
+    // try stdout.print("Das ist noch ein kleienr Test\n", .{});
+    // try stdout.flush();
+
     try perft_iter(13, stdout);
+}
+
+test "perft-check" {
+    const depth = 10;
+    const pos = generator.Position.starting_position();
+    var liste: std.ArrayList(usize) = .empty;
+    defer liste.deinit(std.testing.allocator);
+    for (1..(depth + 1)) |val| {
+        const count = generator.perft(generator.Color.BLACK, pos, val);
+        try liste.append(std.testing.allocator, count);
+    }
+
+    try std.testing.expectEqualSlices(usize, &[_]usize{ 7, 49, 302, 1469, 7361, 36768, 179740, 845931, 3963680, 18391564 }, liste.items);
 }
 
 pub fn main_testing() !void {
