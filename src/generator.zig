@@ -10,6 +10,27 @@ pub const MASK_R3: u32 = 117901056;
 pub const MASK_R5: u32 = 3772834016;
 const PROMO_SQUARES_WHITE: u32 = 0xf;
 const PROMO_SQUARES_BLACK: u32 = 0xf0000000;
+
+pub const SquareType = enum {
+    WHITE_PAWN,
+    BLACK_PAWN,
+    WHITE_KING,
+    BLACK_KING,
+    INVALID,
+};
+
+pub const Square = struct {
+    type: SquareType,
+    index: usize,
+    //adding a function that computes
+    // the index into the neural network
+
+    pub fn to_string() []const u8 {
+        //TODO using bufprint or something else
+        // to create a formatted string
+    }
+};
+
 pub const PieceType = enum {
     PAWN,
     KING,
@@ -109,6 +130,40 @@ pub const Position = struct {
     wp: u32,
     k: u32,
     color: Color = Color.BLACK,
+
+    const Self = @This();
+
+    const SquareIterator = struct {
+        pos: Position,
+        pieces: u32,
+
+        pub fn next(self: *SquareIterator) ?Square {
+            if (self.pieces == 0) {
+                return null;
+            }
+            const index: u5 = @intCast(@ctz(self.pieces));
+            const type_index =
+                0 * @as(u32, @intFromBool(((self.pos.wp & @shlExact(@as(u32, 1), index) & (self.pos.k)) != 0))) +
+                1 * @as(u32, @intFromBool(((self.pos.bp & @shlExact(@as(u32, 1), index) & (self.pos.k)) != 0))) +
+                2 * @as(u32, @intFromBool(((self.pos.wp & @shlExact(@as(u32, 1), index) & (~self.pos.k)) != 0))) +
+                3 * @as(u32, @intFromBool(((self.pos.bp & @shlExact(@as(u32, 1), index) & (~self.pos.k)) != 0)));
+
+            const square_type = switch (type_index) {
+                0 => SquareType.WHITE_KING,
+                1 => SquareType.BLACK_KING,
+                2 => SquareType.WHITE_PAWN,
+                3 => SquareType.BLACK_PAWN,
+                else => SquareType.INVALID,
+            };
+
+            self.pieces &= self.pieces - 1;
+            return Square{ .index = index, .type = square_type };
+        }
+    };
+
+    pub fn square_iterator(self: *const Self) SquareIterator {
+        return .{ .pos = self.*, .pieces = self.bp | self.wp };
+    }
 
     pub fn new() Position {
         return .{ .bp = 0, .wp = 0, .k = 0, .color = Color.BLACK };
