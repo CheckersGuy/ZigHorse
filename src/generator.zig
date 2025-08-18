@@ -143,16 +143,16 @@ pub const Position = struct {
             }
             const index: u5 = @intCast(@ctz(self.pieces));
             const type_index =
-                0 * @as(u32, @intFromBool(((self.pos.wp & @shlExact(@as(u32, 1), index) & (self.pos.k)) != 0))) +
-                1 * @as(u32, @intFromBool(((self.pos.bp & @shlExact(@as(u32, 1), index) & (self.pos.k)) != 0))) +
-                2 * @as(u32, @intFromBool(((self.pos.wp & @shlExact(@as(u32, 1), index) & (~self.pos.k)) != 0))) +
-                3 * @as(u32, @intFromBool(((self.pos.bp & @shlExact(@as(u32, 1), index) & (~self.pos.k)) != 0)));
+                1 * @as(u32, @intFromBool(((self.pos.wp & @shlExact(@as(u32, 1), index) & (self.pos.k)) != 0))) +
+                2 * @as(u32, @intFromBool(((self.pos.bp & @shlExact(@as(u32, 1), index) & (self.pos.k)) != 0))) +
+                4 * @as(u32, @intFromBool(((self.pos.wp & @shlExact(@as(u32, 1), index) & (~self.pos.k)) != 0))) +
+                8 * @as(u32, @intFromBool(((self.pos.bp & @shlExact(@as(u32, 1), index) & (~self.pos.k)) != 0)));
 
             const square_type = switch (type_index) {
-                0 => SquareType.WHITE_KING,
-                1 => SquareType.BLACK_KING,
-                2 => SquareType.WHITE_PAWN,
-                3 => SquareType.BLACK_PAWN,
+                1 => SquareType.WHITE_KING,
+                2 => SquareType.BLACK_KING,
+                4 => SquareType.WHITE_PAWN,
+                8 => SquareType.BLACK_PAWN,
                 else => SquareType.INVALID,
             };
 
