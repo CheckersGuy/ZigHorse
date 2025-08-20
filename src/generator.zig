@@ -10,6 +10,25 @@ pub const MASK_R3: u32 = 117901056;
 pub const MASK_R5: u32 = 3772834016;
 const PROMO_SQUARES_WHITE: u32 = 0xf;
 const PROMO_SQUARES_BLACK: u32 = 0xf0000000;
+
+pub const SquareType = enum {
+    WHITE_PAWN,
+    BLACK_PAWN,
+    WHITE_KING,
+    BLACK_KING,
+    INVALID,
+};
+
+pub const Square = struct {
+    const Self = @This();
+    type: SquareType,
+    index: usize,
+
+    pub fn to_string(self: *const Self, fmt_buffer: []u8) ![]const u8 {
+        return std.fmt.bufPrint(fmt_buffer, "({s}, {d})", .{ @tagName(self.type), self.index });
+    }
+};
+
 pub const PieceType = enum {
     PAWN,
     KING,
@@ -104,14 +123,63 @@ pub fn MoveListe(size: comptime_int) type {
     };
 }
 
+fn get_mirrored(b: u32) u32 {
+    return @bitReverse(b);
+}
+
 pub const Position = struct {
     bp: u32,
     wp: u32,
     k: u32,
     color: Color = Color.BLACK,
 
+    const Self = @This();
+
+    const SquareIterator = struct {
+        pos: Position,
+        pieces: u32,
+
+        pub fn next(self: *SquareIterator) ?Square {
+            if (self.pieces == 0) {
+                return null;
+            }
+            const index: u5 = @intCast(@ctz(self.pieces));
+            const type_index =
+                1 * @as(u32, @intFromBool(((self.pos.wp & @shlExact(@as(u32, 1), index) & (self.pos.k)) != 0))) +
+                2 * @as(u32, @intFromBool(((self.pos.bp & @shlExact(@as(u32, 1), index) & (self.pos.k)) != 0))) +
+                4 * @as(u32, @intFromBool(((self.pos.wp & @shlExact(@as(u32, 1), index) & (~self.pos.k)) != 0))) +
+                8 * @as(u32, @intFromBool(((self.pos.bp & @shlExact(@as(u32, 1), index) & (~self.pos.k)) != 0)));
+
+            const square_type = switch (type_index) {
+                1 => SquareType.WHITE_KING,
+                2 => SquareType.BLACK_KING,
+                4 => SquareType.WHITE_PAWN,
+                8 => SquareType.BLACK_PAWN,
+                else => SquareType.INVALID,
+            };
+
+            self.pieces &= self.pieces - 1;
+            return Square{ .index = index, .type = square_type };
+        }
+    };
+
+    pub fn square_iterator(self: *const Self) SquareIterator {
+        return .{ .pos = self.*, .pieces = self.bp | self.wp };
+    }
+
     pub fn new() Position {
         return .{ .bp = 0, .wp = 0, .k = 0, .color = Color.BLACK };
+    }
+
+    pub fn color_flip(self: Self) Position {
+        return .{ .color = if (self.color == Color.BLACK) Color.WHITE else Color.BLACK, .bp = @bitReverse(self.bp), .wp = @bitReverse(self.wp), .k = @bitReverse(self.k) };
+    }
+
+    pub fn perspective(self: Self) Self {
+        if (self.color == Color.BLACK) {
+            return self.color_flip();
+        }
+        return self;
     }
 
     pub fn starting_position() Position {
@@ -434,4 +502,33 @@ pub fn perft(comptime color: Color, pos: Position, depth: usize) usize {
         counter += perft(@enumFromInt(-@intFromEnum(color)), my_copy, depth - 1);
     }
     return counter;
+}
+
+test "perft-check" {
+    const depth = 10;
+    const pos = Position.starting_position();
+    var liste: std.ArrayList(usize) = .empty;
+    defer liste.deinit(std.testing.allocator);
+    for (1..(depth + 1)) |val| {
+        const count = perft(Color.BLACK, pos, val);
+        try liste.append(std.testing.allocator, count);
+    }
+
+    try std.testing.expectEqualSlices(usize, &[_]usize{ 7, 49, 302, 1469, 7361, 36768, 179740, 845931, 3963680, 18391564 }, liste.items);
+}
+
+test "square_iterator" {
+
+    //just a very small test to see
+    // if we can extract the square given below
+    const position: Position = .{ .bp = (1 << 30) | (1 << 20), .wp = (1 << 10) | (1 << 15) | (1 << 7), .k = (1 << 7), .color = Color.BLACK };
+
+    var it = position.square_iterator();
+    var squares: std.ArrayList(Square) = .empty;
+    defer squares.deinit(std.testing.allocator);
+    while (it.next()) |square| {
+        try squares.append(std.testing.allocator, square);
+    }
+
+    try std.testing.expectEqualSlices(Square, squares.items, &[_]Square{ Square{ .type = .WHITE_KING, .index = 7 }, Square{ .index = 10, .type = .WHITE_PAWN }, Square{ .index = 15, .type = .WHITE_PAWN }, Square{ .index = 20, .type = .BLACK_PAWN }, Square{ .index = 30, .type = .BLACK_PAWN } });
 }
