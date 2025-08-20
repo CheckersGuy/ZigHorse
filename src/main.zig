@@ -30,28 +30,26 @@ pub fn main() !void {
 
     // try perft_iter(13, stdout);
 
-    const position = generator.Position.starting_position();
-    try position.print_position(stdout);
+    // const position = generator.Position.starting_position();
+    // try position.print_position(stdout);
+    // try stdout.flush();
+
+    // var iter = position.square_iterator();
+
+    // const square = iter.next();
+
+    // if (square != null) {
+    //     try stdout.print("Square Index {}", .{square.?.index});
+    // }
+    //
+
+    // const position = generator.Position.starting_position();
+
+    const test_position: generator.Position = .{ .color = generator.Color.BLACK, .bp = 1 << 31, .wp = 0, .k = 0 };
+    try test_position.print_position(stdout);
     try stdout.flush();
-
-    var iter = position.square_iterator();
-
-    const square = iter.next();
-
-    if (square != null) {
-        try stdout.print("Square Index {}", .{square.?.index});
-    }
-}
-
-test "perft-check" {
-    const depth = 10;
-    const pos = generator.Position.starting_position();
-    var liste: std.ArrayList(usize) = .empty;
-    defer liste.deinit(std.testing.allocator);
-    for (1..(depth + 1)) |val| {
-        const count = generator.perft(generator.Color.BLACK, pos, val);
-        try liste.append(std.testing.allocator, count);
-    }
-
-    try std.testing.expectEqualSlices(usize, &[_]usize{ 7, 49, 302, 1469, 7361, 36768, 179740, 845931, 3963680, 18391564 }, liste.items);
+    const flipped = test_position.color_flip();
+    try stdout.print("Error: \n\n", .{});
+    try flipped.print_position(stdout);
+    try stdout.flush();
 }

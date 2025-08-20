@@ -20,14 +20,12 @@ pub const SquareType = enum {
 };
 
 pub const Square = struct {
+    const Self = @This();
     type: SquareType,
     index: usize,
-    //adding a function that computes
-    // the index into the neural network
 
-    pub fn to_string() []const u8 {
-        //TODO using bufprint or something else
-        // to create a formatted string
+    pub fn to_string(self: *const Self, fmt_buffer: []u8) ![]const u8 {
+        return std.fmt.bufPrint(fmt_buffer, "({s}, {d})", .{ @tagName(self.type), self.index });
     }
 };
 
@@ -125,6 +123,10 @@ pub fn MoveListe(size: comptime_int) type {
     };
 }
 
+fn get_mirrored(b: u32) u32 {
+    return @bitReverse(b);
+}
+
 pub const Position = struct {
     bp: u32,
     wp: u32,
@@ -167,6 +169,17 @@ pub const Position = struct {
 
     pub fn new() Position {
         return .{ .bp = 0, .wp = 0, .k = 0, .color = Color.BLACK };
+    }
+
+    pub fn color_flip(self: Self) Position {
+        return .{ .color = if (self.color == Color.BLACK) Color.WHITE else Color.BLACK, .bp = @bitReverse(self.bp), .wp = @bitReverse(self.wp), .k = @bitReverse(self.k) };
+    }
+
+    pub fn perspective(self: Self) Self {
+        if (self.color == Color.BLACK) {
+            return self.color_flip();
+        }
+        return self;
     }
 
     pub fn starting_position() Position {
@@ -489,4 +502,33 @@ pub fn perft(comptime color: Color, pos: Position, depth: usize) usize {
         counter += perft(@enumFromInt(-@intFromEnum(color)), my_copy, depth - 1);
     }
     return counter;
+}
+
+test "perft-check" {
+    const depth = 10;
+    const pos = Position.starting_position();
+    var liste: std.ArrayList(usize) = .empty;
+    defer liste.deinit(std.testing.allocator);
+    for (1..(depth + 1)) |val| {
+        const count = perft(Color.BLACK, pos, val);
+        try liste.append(std.testing.allocator, count);
+    }
+
+    try std.testing.expectEqualSlices(usize, &[_]usize{ 7, 49, 302, 1469, 7361, 36768, 179740, 845931, 3963680, 18391564 }, liste.items);
+}
+
+test "square_iterator" {
+
+    //just a very small test to see
+    // if we can extract the square given below
+    const position: Position = .{ .bp = (1 << 30) | (1 << 20), .wp = (1 << 10) | (1 << 15) | (1 << 7), .k = (1 << 7), .color = Color.BLACK };
+
+    var it = position.square_iterator();
+    var squares: std.ArrayList(Square) = .empty;
+    defer squares.deinit(std.testing.allocator);
+    while (it.next()) |square| {
+        try squares.append(std.testing.allocator, square);
+    }
+
+    try std.testing.expectEqualSlices(Square, squares.items, &[_]Square{ Square{ .type = .WHITE_KING, .index = 7 }, Square{ .index = 10, .type = .WHITE_PAWN }, Square{ .index = 15, .type = .WHITE_PAWN }, Square{ .index = 20, .type = .BLACK_PAWN }, Square{ .index = 30, .type = .BLACK_PAWN } });
 }
