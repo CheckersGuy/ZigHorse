@@ -24,6 +24,8 @@ pub fn test_simd() void {
 }
 
 pub fn main() !void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
     var stdout_buffer: [1024]u8 = undefined;
     var stdout_writer = std.fs.File.stdout().writer(&stdout_buffer);
     const stdout = &stdout_writer.interface;
@@ -45,11 +47,13 @@ pub fn main() !void {
 
     // const position = generator.Position.starting_position();
 
-    const test_position: generator.Position = .{ .color = generator.Color.BLACK, .bp = 1 << 31, .wp = 0, .k = 0 };
-    try test_position.print_position(stdout);
+    const position = generator.Position.starting_position();
+    try position.print_position(stdout);
     try stdout.flush();
-    const flipped = test_position.color_flip();
-    try stdout.print("Error: \n\n", .{});
-    try flipped.print_position(stdout);
+
+    const fen_string = try position.get_fen_string2(allocator);
+    defer allocator.free(fen_string);
+
+    try stdout.print("{s}\n", .{fen_string});
     try stdout.flush();
 }

@@ -286,22 +286,22 @@ pub const Position = struct {
 
     pub fn get_fen_string2(self: Self, allocator: std.mem.Allocator) ![]u8 {
         var list: std.ArrayList(u8) = .empty;
-        try list.appendSlice(allocator, if (self.color == Color.BLACK) "B:" else "W:", allocator);
+        try list.appendSlice(allocator, if (self.color == Color.BLACK) "B:" else "W:");
         const positions: [2]Self = .{ .{ .wp = self.wp, .k = self.k & self.wp, .bp = 0 }, .{ .wp = 0, .k = self.k & self.bp, .bp = self.bp } };
         for (0..2) |index| {
             var it = positions[index].square_iterator();
-            try list.appendSlice(allocator, if (index == 0) ":W" else "B:");
+            try list.appendSlice(allocator, if (index == 0) "W:" else "B:");
             while (it.next()) |square| {
                 if (square.type == .BLACK_KING or square.type == .WHITE_KING) {
                     try list.append(allocator, 'K');
                 }
-                const square_string = std.fmt.allocPrint(allocator, "{d}, ", .{square.index});
+                const square_string = try std.fmt.allocPrint(allocator, "{d}, ", .{square.index + 1});
                 defer allocator.free(square_string);
                 try list.appendSlice(allocator, square_string);
             }
         }
-        try list.pop();
-        try list.pop();
+        _ = list.pop();
+        _ = list.pop();
         return list.toOwnedSlice(allocator);
     }
 
