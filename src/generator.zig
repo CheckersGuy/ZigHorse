@@ -284,24 +284,28 @@ pub const Position = struct {
         }
     }
 
-    pub fn get_fen_string2(self: Self, allocator: std.mem.Allocator) ![]u8 {
+    pub fn get_fen_string(self: Self, allocator: std.mem.Allocator) ![]u8 {
         var list: std.ArrayList(u8) = .empty;
-        try list.appendSlice(allocator, if (self.color == Color.BLACK) "B:" else "W:");
-        const positions: [2]Self = .{ .{ .wp = self.wp, .k = self.k & self.wp, .bp = 0 }, .{ .wp = 0, .k = self.k & self.bp, .bp = self.bp } };
-        for (0..2) |index| {
-            var it = positions[index].square_iterator();
-            try list.appendSlice(allocator, if (index == 0) "W:" else "B:");
+        try list.appendSlice(allocator, if (self.color == Color.BLACK) "B" else "W");
+        const positions: [2]Self = .{ .{
+            .color = .WHITE,
+            .wp = self.wp,
+            .k = self.k & self.wp,
+            .bp = 0,
+        }, .{ .color = .BLACK, .wp = 0, .k = self.k & self.bp, .bp = self.bp } };
+        for (positions) |pos| {
+            var it = pos.square_iterator();
+            try list.appendSlice(allocator, if (pos.color == .WHITE) ":W" else ":B");
             while (it.next()) |square| {
                 if (square.type == .BLACK_KING or square.type == .WHITE_KING) {
                     try list.append(allocator, 'K');
                 }
-                const square_string = try std.fmt.allocPrint(allocator, "{d}, ", .{square.index + 1});
+                const square_string = try std.fmt.allocPrint(allocator, "{d},", .{square.index + 1});
                 defer allocator.free(square_string);
                 try list.appendSlice(allocator, square_string);
             }
+            _ = list.pop();
         }
-        _ = list.pop();
-        _ = list.pop();
         return list.toOwnedSlice(allocator);
     }
 
@@ -336,46 +340,6 @@ pub const Position = struct {
             }
             try writer.print("\n", .{});
         }
-    }
-
-    fn get_fen_string(pos: Position, buffer: []u8) []u8 {
-        const pieces = [_]u32{ pos.wp, pos.bp };
-        var length: usize = 0;
-        buffer[length] = if (pos.color == Color.BLACK) 'B' else 'W';
-        length += 1;
-        for (pieces, 0..) |piece, index| {
-            if (piece != 0) {
-                buffer[length] = ':';
-                buffer[length + 1] = if (index == 0) 'W' else 'B';
-                length += 2;
-            }
-            var current = piece;
-            while (current != 0) {
-                const square: u32 = @ctz(current);
-                const mask: u32 = std.math.shl(u32, 1, square);
-                if ((mask & pos.k) != 0) {
-                    buffer[length] = 'K';
-                    length += 1;
-                }
-                const first = (square + 1) / 10;
-                if (first != 0) {
-                    buffer[length] = @intCast(48 + first);
-                    length += 1;
-                }
-
-                const second = (square + 1) % 10;
-                buffer[length] = @intCast(48 + second);
-                length += 1;
-
-                if ((current & (~mask)) != 0) {
-                    buffer[length] = ',';
-                    length += 1;
-                }
-                current &= current - 1;
-            }
-        }
-
-        return buffer[0..length];
     }
 
     pub fn pos_from_fen(fen_string: []const u8) !Position {
