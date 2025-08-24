@@ -19,6 +19,12 @@ pub const SquareType = enum {
     INVALID,
 };
 
+const FenErors = error{
+    InvalidToken,
+    InvalidSquare,
+    IllegalPosition,
+};
+
 pub const Square = struct {
     const Self = @This();
     type: SquareType,
@@ -134,6 +140,7 @@ pub const Position = struct {
     color: Color = Color.BLACK,
 
     const Self = @This();
+    const Empty: Self = .{ .bp = 0, .wp = 0, .k = 0, .Color = .BLACK };
 
     const SquareIterator = struct {
         pos: Position,
@@ -367,6 +374,44 @@ pub const Position = struct {
         }
 
         return position;
+    }
+
+    pub fn pos_from_fen2(fen_string: []const u8) !Position {
+        //index into our fen_string
+
+        var position: Position = .Empty;
+        var c_color: ?Color = null;
+        position.color = switch (fen_string[0]) {
+            'W' => Color.WHITE,
+            'B' => Color.BLACK,
+            else => return FenErors.InvalidToken,
+        };
+        var index: usize = 1;
+
+        state: switch (fen_string[index]) {
+            ',' | ' ' => {
+                index = index + 1;
+                continue :state fen_string[index];
+            },
+            ':' => {
+                //scanning the color
+                c_color = switch (fen_string[index + 1]) {
+                    'W' => Color.WHITE,
+                    'B' => Color.BLACK,
+                    else => return FenErors.InvalidToken,
+                };
+                index = index + 2;
+                continue :state fen_string[index];
+            }, //reading the Square
+            '0'...'9' => {
+                var k = index;
+                while (k < fen_string.len and fen_string[k] >= '0' and fen_string[k] <= '9') {
+                    k = k + 1;
+                }
+                const square = fen_string[index..k];
+                index = k;
+            },
+        }
     }
 };
 

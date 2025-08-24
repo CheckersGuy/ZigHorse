@@ -51,7 +51,7 @@ pub fn main() !void {
     try position.print_position(stdout);
     try stdout.flush();
 
-    const fen_string = try position.get_fen_string2(allocator);
+    const fen_string = try position.get_fen_string(allocator);
     defer allocator.free(fen_string);
 
     try stdout.print("{s}\n", .{fen_string});
